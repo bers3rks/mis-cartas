@@ -328,10 +328,31 @@ function defaults() {
     payments: [],  // {id, ts, casinoId, date, amount, note}
   };
 }
+// Coerce stored/imported data to the expected types so nothing untrusted reaches the HTML as-is.
+function normalize(d) {
+  const base = defaults();
+  const n = v => { const x = Number(v); return isFinite(x) ? x : 0; };
+  const nn = v => (v === null || v === undefined || v === '' ? null : n(v));
+  const t = v => (v === null || v === undefined ? '' : String(v));
+  const day = v => (/^\d{4}-\d{2}-\d{2}$/.test(v) ? v : today());
+  const arr = v => (Array.isArray(v) ? v.filter(x => x && typeof x === 'object') : []);
+  const kit = v => Object.fromEntries(Object.entries(v && typeof v === 'object' ? v : {}).map(([k, q]) => [t(k), n(q)]));
+  const casinos = arr(d.casinos).map(c => ({ id: t(c.id), name: t(c.name), short: t(c.short || c.name), icon: t(c.icon), color: /^#[0-9a-f]{3,8}$/i.test(c.color) ? c.color : '#6d3fc0', rate: nn(c.rate) }));
+  return {
+    version: n(d.version) || 1,
+    lastBackup: nn(d.lastBackup),
+    materials: Array.isArray(d.materials) ? arr(d.materials).map(m => ({ id: t(m.id), name: t(m.name), kit: n(m.kit), alert: n(m.alert) })) : base.materials,
+    casinos: casinos.length ? casinos : base.casinos,
+    purchases: arr(d.purchases).map(p => ({ id: t(p.id), ts: n(p.ts), date: day(p.date), materialId: p.materialId ? t(p.materialId) : null, desc: t(p.desc), qty: n(p.qty), cost: n(p.cost), note: t(p.note) })),
+    usages: arr(d.usages).map(u => ({ id: t(u.id), ts: n(u.ts), date: day(u.date), materialId: t(u.materialId), qty: n(u.qty), note: t(u.note) })),
+    shipments: arr(d.shipments).map(s => ({ id: t(s.id), ts: n(s.ts), casinoId: t(s.casinoId), date: day(s.date), letters: n(s.letters), rate: nn(s.rate), kit: kit(s.kit), note: t(s.note) })),
+    payments: arr(d.payments).map(p => ({ id: t(p.id), ts: n(p.ts), casinoId: t(p.casinoId), date: day(p.date), amount: n(p.amount), note: t(p.note) })),
+  };
+}
 function load() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return Object.assign(defaults(), JSON.parse(raw));
+    if (raw) return normalize(JSON.parse(raw));
   } catch (e) { /* fall through */ }
   return defaults();
 }
@@ -743,7 +764,7 @@ $('#importFile').addEventListener('change', async e => {
     const d = JSON.parse(await f.text());
     if (!Array.isArray(d.casinos) || !Array.isArray(d.shipments) || !Array.isArray(d.purchases)) throw new Error('bad');
     if (!confirm('Esto va a reemplazar los datos actuales con los de la copia. ¿Continuar?')) return;
-    S = Object.assign(defaults(), d); save(); render(); toast('✅ Copia recuperada');
+    S = normalize(d); save(); render(); toast('✅ Copia recuperada');
   } catch (err) { alert('Ese archivo no es una copia válida de Mis Cartas.'); }
 });
 
