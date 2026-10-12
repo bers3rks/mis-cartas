@@ -1,0 +1,10 @@
+# Copias de seguridad con datos personales: nunca subirlas
+mis-cartas-copia-*.json
+*.json.bak
+
+# Configuración local de Claude Code
+.claude/settings.local.json
+
+# Sistema
+.DS_Store
+Thumbs.db
