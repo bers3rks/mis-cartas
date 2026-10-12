@@ -348,7 +348,7 @@ const CASINO_COLORS = {
   luckyland: ['#c46a06', '#f0a92e'],
   globalpoker: ['#2a55c4', '#5a8af2'],
 };
-const cvars = c => { const [a, b] = CASINO_COLORS[c.id] || [c.color, c.color]; return `--c:${a};--c2:${b}`; };
+const cvars = c => { const [a, b] = CASINO_COLORS[c.id] || [c.color, c.color]; return esc(`--c:${a};--c2:${b}`); };
 const casino = id => S.casinos.find(c => c.id === id);
 const material = id => S.materials.find(m => m.id === id);
 
@@ -399,7 +399,7 @@ function go(id) {
 function render() {
   if (!TABS().some(t => t.id === tab)) tab = 'resumen';
   $('#tabs').innerHTML = TABS().map(t =>
-    `<button class="tab ${t.id === tab ? 'on' : ''}" data-act="tab" data-id="${t.id}"><span class="i">${t.icon}</span><span class="l">${esc(t.label)}</span></button>`
+    `<button class="tab ${t.id === tab ? 'on' : ''}" data-act="tab" data-id="${esc(t.id)}"><span class="i">${esc(t.icon)}</span><span class="l">${esc(t.label)}</span></button>`
   ).join('');
   if (tab === 'resumen') viewSummary();
   else if (tab === 'material') viewMaterials();
@@ -437,8 +437,8 @@ function viewSummary() {
   h += `<div class="card"><h2>Por casino</h2>`;
   for (const c of S.casinos) {
     const s = casinoStats(c.id);
-    h += `<div class="ccard" data-act="tab" data-id="${c.id}" style="${cvars(c)}">
-      <div class="dot">${c.icon}</div>
+    h += `<div class="ccard" data-act="tab" data-id="${esc(c.id)}" style="${cvars(c)}">
+      <div class="dot">${esc(c.icon)}</div>
       <div class="mid" style="flex:1"><div class="t"><b>${esc(c.name)}</b></div><div class="muted">${plural(s.letters, 'carta', 'cartas')} · cobrado ${money(s.paid)}</div></div>
       <div class="amt" style="text-align:right"><div class="muted">Te debe</div><b>${money(s.pending)}</b></div>
     </div>`;
@@ -500,11 +500,11 @@ function viewMaterials() {
     const m = material(r.materialId);
     if (r.kind === 'p') {
       const what = m ? `Compra · ${r.qty} ${esc(m.name.toLowerCase())}` : esc(r.desc || 'Otro gasto');
-      h += `<li class="item" data-act="editPurchase" data-id="${r.id}"><span class="ic">${m ? '🛒' : '💸'}</span>
+      h += `<li class="item" data-act="editPurchase" data-id="${esc(r.id)}"><span class="ic">${m ? '🛒' : '💸'}</span>
         <div class="mid"><div class="t">${what}</div><div class="s">${fdate(r.date)}${r.note ? ' · ' + esc(r.note) : ''}</div></div>
         <div class="amt neg">−${money(r.cost)}</div></li>`;
     } else {
-      h += `<li class="item" data-act="editUsage" data-id="${r.id}"><span class="ic">✏️</span>
+      h += `<li class="item" data-act="editUsage" data-id="${esc(r.id)}"><span class="ic">✏️</span>
         <div class="mid"><div class="t">Usé ${r.qty} ${esc((m ? m.name : 'material').toLowerCase())}</div><div class="s">${fdate(r.date)}${r.note ? ' · ' + esc(r.note) : ''}</div></div>
         <div class="amt muted">−${r.qty}</div></li>`;
     }
@@ -516,7 +516,7 @@ function viewMaterials() {
 function viewCasino(cid) {
   const c = casino(cid);
   const s = casinoStats(cid);
-  setTitle(`${c.icon} ${c.name}`, c.rate ? `Pago por carta: ${money(c.rate)}` : 'Pago por carta: sin definir');
+  setTitle(`${esc(c.icon)} ${c.name}`, c.rate ? `Pago por carta: ${money(c.rate)}` : 'Pago por carta: sin definir');
   let h = `<div class="casino-hero" style="${cvars(c)}">
     <div class="label">Te debe</div>
     <div class="big">${money(s.pending)}</div>
@@ -528,14 +528,14 @@ function viewCasino(cid) {
   </div>`;
   if (s.noRate) h += `<div class="alert warn">⚠️ ${s.noRate === 1 ? 'Hay 1 envío' : `Hay ${s.noRate} envíos`} sin pago por carta. Tócalo abajo para ponerle el precio cuando lo sepas.</div>`;
   h += `<div class="btns">
-    <button class="btn primary" style="${cvars(c)};background:linear-gradient(140deg,var(--c),var(--c2))" data-act="newShipment" data-id="${cid}">✉️ Envié cartas</button>
-    <button class="btn green" data-act="newPayment" data-id="${cid}">💵 Me pagaron</button>
+    <button class="btn primary" style="${cvars(c)};background:linear-gradient(140deg,var(--c),var(--c2))" data-act="newShipment" data-id="${esc(cid)}">✉️ Envié cartas</button>
+    <button class="btn green" data-act="newPayment" data-id="${esc(cid)}">💵 Me pagaron</button>
   </div>`;
 
   h += `<div class="sec-title">Cartas enviadas</div><div class="card"><ul class="list">`;
   if (!s.sh.length) h += `<li class="empty">Todavía no hay envíos.</li>`;
   for (const x of [...s.sh].sort(byDate)) {
-    h += `<li class="item" data-act="editShipment" data-id="${x.id}"><span class="ic">✉️</span>
+    h += `<li class="item" data-act="editShipment" data-id="${esc(x.id)}"><span class="ic">✉️</span>
       <div class="mid"><div class="t">${plural(x.letters, 'carta', 'cartas')}</div>
       <div class="s">${fdate(x.date)} · ${x.rate ? money(x.rate) + ' c/u' : '<span style="color:var(--warn-ink)">sin precio</span>'}${x.note ? ' · ' + esc(x.note) : ''}</div></div>
       <div class="amt">${x.rate ? money(x.letters * x.rate) : '—'}</div></li>`;
@@ -543,7 +543,7 @@ function viewCasino(cid) {
   h += `</ul></div><div class="sec-title">Pagos recibidos</div><div class="card"><ul class="list">`;
   if (!s.pay.length) h += `<li class="empty">Todavía no hay pagos.</li>`;
   for (const x of [...s.pay].sort(byDate)) {
-    h += `<li class="item" data-act="editPayment" data-id="${x.id}"><span class="ic">💵</span>
+    h += `<li class="item" data-act="editPayment" data-id="${esc(x.id)}"><span class="ic">💵</span>
       <div class="mid"><div class="t">Pago recibido</div><div class="s">${fdate(x.date)}${x.note ? ' · ' + esc(x.note) : ''}</div></div>
       <div class="amt pos">+${money(x.amount)}</div></li>`;
   }
@@ -558,7 +558,7 @@ const dateIn = v => `<input class="in" type="date" name="date" value="${esc(v ||
 const moneyIn = (name, v, ph) => `<div class="money"><span>$</span><input class="in" name="${name}" inputmode="decimal" placeholder="${ph || '0.00'}" value="${v === null || v === undefined || v === '' ? '' : esc(v)}"></div>`;
 const stepper = (name, v) => `<div class="stepper"><button type="button" data-act="step" data-name="${name}" data-d="-1">−</button><input class="in" name="${name}" inputmode="numeric" value="${esc(v)}"><button type="button" data-act="step" data-name="${name}" data-d="1">+</button></div>`;
 const noteIn = (v, ph) => `<input class="in" name="note" value="${esc(v || '')}" placeholder="${ph || 'Opcional'}">`;
-const matSelect = (v, withOther) => `<select name="materialId">${S.materials.map(m => `<option value="${m.id}" ${m.id === v ? 'selected' : ''}>${esc(m.name)}</option>`).join('')}${withOther ? `<option value="" ${!v ? 'selected' : ''}>Otro gasto (no es material)</option>` : ''}</select>`;
+const matSelect = (v, withOther) => `<select name="materialId">${S.materials.map(m => `<option value="${esc(m.id)}" ${m.id === v ? 'selected' : ''}>${esc(m.name)}</option>`).join('')}${withOther ? `<option value="" ${!v ? 'selected' : ''}>Otro gasto (no es material)</option>` : ''}</select>`;
 
 function openSheet(opts) {
   current = opts;
@@ -697,10 +697,10 @@ function kitForm() {
     body: `<p class="muted" style="margin-top:0"><b>Por carta:</b> cuánto se gasta en cada carta (pon 0 si no se usa en cada carta).<br><b>Avisar:</b> te avisa cuando quede esa cantidad o menos.</p>
       <div class="krow"><span class="h">Material</span><span class="h">Por carta</span><span class="h">Avisar</span></div>`
       + S.materials.map(m => `<div class="krow">
-          <input class="in" name="n_${m.id}" value="${esc(m.name)}">
-          <input class="in" name="k_${m.id}" inputmode="numeric" value="${m.kit}">
-          <input class="in" name="a_${m.id}" inputmode="numeric" value="${m.alert}">
-        </div>${used(m.id) ? '' : `<label class="chk muted"><input type="checkbox" name="del_${m.id}"> Quitar ${esc(m.name)}</label>`}`).join('')
+          <input class="in" name="n_${esc(m.id)}" value="${esc(m.name)}">
+          <input class="in" name="k_${esc(m.id)}" inputmode="numeric" value="${m.kit}">
+          <input class="in" name="a_${esc(m.id)}" inputmode="numeric" value="${m.alert}">
+        </div>${used(m.id) ? '' : `<label class="chk muted"><input type="checkbox" name="del_${esc(m.id)}"> Quitar ${esc(m.name)}</label>`}`).join('')
       + fld('➕ Agregar material nuevo', `<input class="in" name="newName" placeholder="Ej: Tinta, cinta, etiquetas…">`),
     onSave(d) {
       for (const m of S.materials) {

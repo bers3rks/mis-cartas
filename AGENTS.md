@@ -54,7 +54,7 @@ Dentro de `index.html`, el `<script>` está ordenado en bloques comentados:
 5. 🚨 **La copia de seguridad debe poder restaurarse siempre.** Cualquier cambio de formato debe seguir aceptando copias viejas (`importFile` valida que existan `casinos`, `shipments` y `purchases` como arrays).
 6. **El stock nunca se guarda: se calcula** (`stock()`), a partir de compras − envíos×kit − usos. No agregar un campo "stock" guardado (se desincroniza).
 7. **El kit se guarda congelado en cada envío** (`shipment.kit`). Cambiar el kit en ajustes afecta solo a envíos **nuevos**; los pasados conservan lo que consumieron. No recalcular envíos viejos con el kit actual.
-8. **Escapar siempre texto del usuario** con `esc()` antes de meterlo en `innerHTML`.
+8. **Escapar con `esc()` todo dato guardado** antes de meterlo en `innerHTML`: textos, pero también `id`, íconos y colores. Los datos pueden venir de un archivo de copia importado, así que no se consideran confiables.
 9. **Todo en español** y con palabras simples (nada de "registro", "entidad", "sincronizar"…; preferir "anotar", "guardar", "te debe").
 10. **Mobile-first:** objetivos táctiles ≥ 44px (los botones usan 54–60px), inputs ≥ 16px de fuente (si no, iOS hace zoom al enfocar), respetar `env(safe-area-inset-*)`.
 11. **Colores solo vía tokens CSS** (`--bg`, `--card`, `--ink`, …). Todo token nuevo debe definirse **tres veces**: en `:root` (claro), en `@media (prefers-color-scheme: dark) :root:not([data-theme="light"])` y en `:root[data-theme="dark"]`.
